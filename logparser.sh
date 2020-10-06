@@ -85,7 +85,7 @@ echo
 echo return codes count:
 awk '{print $9}' $filename | grep ^[^45] | sort | uniq -c | sort -n
 
-# error codes list(4xx, 5xx):
+# error codes list (4xx, 5xx):
 echo
 echo error return codes count:
 awk '{print $9}' $filename | grep ^[45]| sort | uniq -c | sort -n
