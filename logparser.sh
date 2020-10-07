@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 ##
 ## Anikeev Georgiy
 ## M3O-117M-20
@@ -70,25 +70,43 @@ fi
 
 ## file parsing:
 
+#check for previous script runs:
+last=.logparser.last
+if [ -e "$last" ]
+then
+	timestart=$( cat $last) 
+else
+	touch .logparser.last
+	timestart=$( head $filename -n 1 | awk '{print $4}' | cut -c2- )
+fi
+
+timestop=$( tail $filename -n 1 | awk '{print $4}' | cut -c2- )
+echo $timestop > $last
+echo processing log from $timestart to $timestop:
+timestart=$( echo $timestart | sed 's|/|\\/|g' | sed 's|:|\\:|g')
+
 # top 15 IPs:
 echo
 echo top 15 IP\'s:
-awk '{print $1}' $filename | sort | uniq -c | sort -rn | head -n 15
+#1st awk '{print $1}' $filename | sort | uniq -c | sort -rn | head -n 15
+#2 awk '/'$timestart'/{Q=1;}Q' $filename | awk '{print $1}' | sort | uniq -c | sort -rn | head -n 15
+tac $filename | awk '/'$timestart'/ {exit} 1' | tac | awk '{print $1}' | sort | uniq -c | sort -rn| head -n 15
 
 # top 15 resources:
 echo
 echo top 15 resources:
-awk '{print $7}' $filename | sort | uniq -c | sort -nr | head -n 15
+tac $filename | awk '/'$timestart'/ {exit} 1' | tac | awk '{print $7}' | sort | uniq -c | sort -nr | head -n 15
+
 
 # return codes list:
 echo
 echo return codes count:
-awk '{print $9}' $filename | grep ^[^45] | sort | uniq -c | sort -n
+tac $filename | awk '/'$timestart'/ {exit} 1' | tac | awk '{print $9}' | grep ^[^45] | sort | uniq -c | sort -n
 
 # error codes list (4xx, 5xx):
 echo
 echo error return codes count:
-awk '{print $9}' $filename | grep ^[45]| sort | uniq -c | sort -n
+tac $filename | awk '/'$timestart'/ {exit} 1' | tac | awk '{print $9}' | grep ^[45]| sort | uniq -c | sort -n
 
 
 
